@@ -1,5 +1,5 @@
 #!/bin/bash
-#checking the arguments
+# Checking the arguments
 if [ "$#" -lt 1 ]; then
     echo "Usage: $0 <CSV file path> [additional description]"
     exit 1
@@ -12,26 +12,33 @@ tail -n +2 "$csv_file" | while IFS=, read -r bug_id description branch_name deve
 do
     current_datetime=$(date '+%Y-%m-%d %H:%M:%S')
 
-    #  the commit message formatt
+    # Format the commit message
     if [ -n "$additional_description" ]; then
         commit_message="BugID:$bug_id:$current_datetime:$branch_name:$developer:$priority:$description:$additional_description"
     else
         commit_message="BugID:$bug_id:$current_datetime:$branch_name:$developer:$priority:$description"
     fi
 
-    # checks if da branch exists
+    # Check if the branch exists
     if git show-ref --quiet refs/heads/"$branch_name"; then
         git checkout "$branch_name"
     else
-        # create da branch if  doesn't exist
+        # Create the branch if it doesn't exist
         git checkout -b "$branch_name"
     fi
 
+    # Perform Git operations
     git add .
     
+    # Ensure that the file containing secrets is not added to the commit
     git reset HEAD "$csv_file"
     
     git commit -m "$commit_message"
-    
+
+    # Push the commit and check for errors
+    if ! git push origin "$branch_name"; then
+        echo "Error pushing to branch $branch_name. Please check for repository rules or other issues."
+        exit 1
+    fi
 
 done
