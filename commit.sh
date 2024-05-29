@@ -16,14 +16,17 @@ if [ ! -f "$CSV_FILE" ]; then
 fi
 
 # Extract data from the CSV file
-while IFS=, read -r GITHUB_URL BugID Priority Developer BranchName Description
-do
-  # Skip the header row (assuming the first column has a header 'GITHUB_URL')
-  if [ "$GITHUB_URL" != "GITHUB_URL" ]; then
+#while IFS=, read -r BugID Description BranchName Developer Priority GITHUB_URL
+#do
+  # Debug statement to check variable values
+  echo "Read values - BugID: $BugID, Description: $Description, BranchName: $BranchName, Developer: $Developer, Priority: $Priority, GITHUB_URL: $GITHUB_URL"
+  
+  # Skip the header row (assuming the first column has a header 'BugID')
+  if [ "$BugID" != "BugID" ]; then
     # Check out to the branch or create it if it doesn't exist
     if ! git rev-parse --verify --quiet "$BranchName"; then
       git checkout -b "$BranchName"
-      git push origin "$BranchName"
+      git push "${GITHUB_URL}" "$BranchName"
     else
       git checkout "$BranchName"
     fi
@@ -39,8 +42,8 @@ do
     # Perform Git operations
     git add .
     git commit -m "$COMMIT_MESSAGE"
-    git push origin "$BranchName"
+    git push "${GITHUB_URL}" "$BranchName"
 
     echo "Committed and pushed changes with message: $COMMIT_MESSAGE"
   fi
-done < "$CSV_FILE"
+#done < <(tail -n +2 "$CSV_FILE")
