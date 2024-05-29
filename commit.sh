@@ -2,7 +2,7 @@
 
 # Check if the correct number of arguments is provided
 if [ "$#" -lt 1 ]; then
-    echo "Usage: $0 <Excel file path> [additional description]"
+    echo "Usage: $0 <CSV file path> [additional description]"
     exit 1
 fi
 
@@ -28,8 +28,15 @@ do
         commit_message="BugID:$bug_id:$current_datetime:$branch_name:$developer:$priority:$description"
     fi
 
+    # Check if the branch exists
+    if git show-ref --quiet refs/heads/"$branch_name"; then
+        git checkout "$branch_name"
+    else
+        # Create the branch if it doesn't exist
+        git checkout -b "$branch_name"
+    fi
+
     # Perform Git operations
-    git checkout "$branch_name"
     git add .
     git commit -m "$commit_message"
     git push origin "$branch_name"
