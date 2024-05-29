@@ -11,17 +11,12 @@ csv_file=$1
 additional_description=$2
 
 # Read the CSV file and extract the necessary details
-while IFS=, read -r bug_id description branch_name developer priority github_url
+tail -n +2 "$csv_file" | while IFS=, read -r bug_id description branch_name developer priority github_url
 do
-    # Skip the header row
-    if [ "$bug_id" = "BugID" ]; then
-        continue
-    fi
-
     # Get the current date and time
     current_datetime=$(date '+%Y-%m-%d %H:%M:%S')
 
-    # Format the commit message
+    # Format the commit message without the GITHUB_URL
     if [ -n "$additional_description" ]; then
         commit_message="BugID:$bug_id:$current_datetime:$branch_name:$developer:$priority:$description:$additional_description"
     else
@@ -39,6 +34,10 @@ do
     # Perform Git operations
     git add .
     git commit -m "$commit_message"
+    
+    # Ensure that the file containing secrets is not added to the commit
+    git reset HEAD "$csv_file"
+    
     git push origin "$branch_name"
 
-done < "$csv_file"
+done
